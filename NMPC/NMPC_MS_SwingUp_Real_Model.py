@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt;
 import numpy as np
 import time
 import matplotlib.animation as animation
+from matplotlib.patches import Rectangle
 
-# # Non Linear Model (ODEs)
+# Non Linear Model (ODEs)
 def dynamic(x_state,u):
     # x = [x dx th dth];
     # System constants
@@ -13,7 +14,6 @@ def dynamic(x_state,u):
     l = L / 2;
     m = 0.2;
     M = 0.7;
-
     # States
     x = x_state[0]
     dx = x_state[1]
@@ -28,25 +28,9 @@ def dynamic(x_state,u):
 
     f = u[0];
     ddx = (m*g*casadi.sin(th)*casadi.cos(th)  - (7/3)*(f + m*l*dth*dth*casadi.sin(th) + Ff) - (Mf*casadi.cos(th))/l)/(m*casadi.cos(th)*casadi.cos(th) - (7/3)*M);
-    ddth = (g*casadi.sin(th) - ddx*casadi.cos(th) - Mf/(m*l))/((7/3)*l);
+    ddth = (M*g*casadi.sin(th) - casadi.cos(th)*(f + m*l*dth*dth*casadi.sin(th) + Ff) - (M*Mf)/(m*l))/((7/3)*M*l - m*l*casadi.cos(th)*casadi.cos(th))
 
     return casadi.vertcat(dx,ddx,dth,ddth);
-# def dynamic(x_state,u):
-#     x = x_state[0]
-#     dx = x_state[1]
-#     th = x_state[2];
-#     dth = x_state[3]
-#     f = u[0];
-#     g = 9.81;
-#     L = 0.6;
-#     l = L / 2;
-#     mp = 0.2;
-#     mc = 0.7;
-
-#     ddx = (f + mp * casadi.sin(th) * (l * dth * dth + g * casadi.cos(th))) / (mc + mp * casadi.sin(th) * casadi.sin(th));
-#     ddth = (-f * casadi.cos(th) - mp * l * dth * dth * casadi.cos(th) * casadi.sin(th) - (mc + mp) * g * casadi.sin(th)) /(l * (mc + mp * casadi.sin(th) * casadi.sin(th)));
-    
-#     return casadi.vertcat(dx,ddx,dth,ddth);
 
 # Numeric Integrator RK4
 def rk4(ode, h, xs, u):
@@ -79,7 +63,7 @@ U = opti.variable(1,N); # Force
 dt = 0.05;  # Discretization time
 
 # Input Constraints
-opti.subject_to(opti.bounded(-50,U,50));
+opti.subject_to(opti.bounded(-100,U,100));
 
 # Initial Conditions
 opti.subject_to(X[:,0] == opt_x0);
@@ -102,7 +86,7 @@ for i in range(N):
     obj = obj + casadi.mtimes(casadi.mtimes(err.T,Q),err) + U[0,i]*R*U[0,i]
 
 opti.minimize(obj);
-opts_setting = {'ipopt.max_iter': 500, 'ipopt.print_level': 0, 'print_time': 0,'ipopt.acceptable_tol': 1e-8, 'ipopt.acceptable_obj_change_tol': 1e-6}
+opts_setting = {'ipopt.print_level': 0, 'print_time': 0,'ipopt.acceptable_tol': 1e-8, 'ipopt.acceptable_obj_change_tol': 1e-6}
 opti.solver('ipopt', opts_setting);
 
 final_state = np.array([0,0,0,0]); # UPRIGHT position
@@ -119,7 +103,7 @@ U_log = np.zeros((1,500));
 X_log = np.zeros((4,500));
 
 mpciter = 0;
-while(mpciter < 500):
+while(np.linalg.norm(current_state - final_state) > 1e-3 and mpciter < 500):
     
     opti.set_value(opt_x0, current_state); # Set the constraint again
     opti.set_initial(U,u0); # RESET the U variable (INPUTS)
@@ -138,36 +122,40 @@ while(mpciter < 500):
     X_log[:,mpciter] = x_solved[:,0];
     mpciter = mpciter + 1;
 
+X_log = X_log[:,0:mpciter];
+U_log = U_log[0,0:mpciter];
 
+timestr = time.strftime("%Y%m%d-%H%M%S")
 
-# X_SS = sol.value(X);
-# plt.plot(x_SS);
-# plt.plot(dx_SS);
-# plt.plot(th_SS);
-# plt.plot(dth_SS);
 plt.plot(X_log.T)
 plt.grid(True)
 plt.legend(["x", "dx", "th", "dth"])
 plt.title('NMPC Inverted Pendulum - Multiple Shooting')
+plt.savefig("../plots/CartPoleLog-{}.png".format(timestr))
+
 plt.show()
 
+L = 1;
+fig = plt.figure(figsize=(5,5));
+ax = fig.add_subplot(autoscale_on=False, xlim=(-3.5,3.5), ylim=(-2,2));
+ax.set_aspect('equal')
+ax.grid();
 
-# L = 1;
-# fig = plt.figure(figsize=(5,5));
-# ax = fig.add_subplot(autoscale_on=False, xlim=(-4,4), ylim=(-4,4));
-# ax.set_aspect('equal')
-# ax.grid();
+ax_u = fig.add_subplot();
+ax_u.plot(U_log);
 
-# line, = ax.plot([], [], 'o-', lw=2);
+cart_line, = ax.plot([], [], 'o-', lw=8);
+line, = ax.plot([], [], 'o-', lw=2);
 
-# def animate(i):
-#     cart_pos = x_SS[i];
-#     thetha = th_SS[i];
-#     x_pend = cart_pos + L*np.sin(thetha);
-#     y_pend = L*np.cos(thetha);
-#     line.set_data([cart_pos, x_pend],[0, y_pend]);
-#     return line,
+def animate(i):
+    cart_pos = X_log[0,i];
+    thetha = X_log[2,i];
+    x_pend = cart_pos + L*np.sin(thetha);
+    y_pend = L*np.cos(thetha);
+    line.set_data([cart_pos, x_pend],[0, y_pend]);
+    cart_line.set_data([cart_pos - 0.2, cart_pos + 0.2],[0,0])
+    return line,cart_line
 
-# ani = animation.FuncAnimation(fig, animate, frames=N, interval=1000*dt, blit=True);
-# ani.save('NMPC_SS2.gif', writer='ffmpeg', fps=15)
-# plt.show()
+ani = animation.FuncAnimation(fig, animate, frames=mpciter, blit=True);
+ani.save('../gifs/SwingUp-{}.gif'.format(timestr), writer='ffmpeg', fps=15)
+plt.show()
