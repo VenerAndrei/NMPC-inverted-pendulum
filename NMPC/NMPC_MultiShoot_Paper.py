@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt;
 import numpy as np
 import time
 import matplotlib.animation as animation
+from matplotlib.patches import Rectangle
 
 # Non Linear Model (ODEs)
 def dynamic(x_state,u):
@@ -103,7 +104,7 @@ U_log = np.zeros((1,500));
 X_log = np.zeros((4,500));
 
 mpciter = 0;
-while(mpciter < 500):
+while(np.linalg.norm(current_state - final_state) > 1e-3 and mpciter < 500):
     
     opti.set_value(opt_x0, current_state); # Set the constraint again
     opti.set_initial(U,u0); # RESET the U variable (INPUTS)
@@ -122,26 +123,26 @@ while(mpciter < 500):
     X_log[:,mpciter] = x_solved[:,0];
     mpciter = mpciter + 1;
 
+X_log = X_log[:,0:mpciter];
+U_log = U_log[0,0:mpciter];
 
+timestr = time.strftime("%Y%m%d-%H%M%S")
 
-# X_SS = sol.value(X);
-# plt.plot(x_SS);
-# plt.plot(dx_SS);
-# plt.plot(th_SS);
-# plt.plot(dth_SS);
 plt.plot(X_log.T)
 plt.grid(True)
 plt.legend(["x", "dx", "th", "dth"])
 plt.title('NMPC Inverted Pendulum - Multiple Shooting')
-plt.show()
+plt.savefig("../plots/CartPoleLog-{}.png".format(timestr))
 
+plt.show()
 
 L = 1;
 fig = plt.figure(figsize=(5,5));
-ax = fig.add_subplot(autoscale_on=False, xlim=(-4,4), ylim=(-4,4));
+ax = fig.add_subplot(autoscale_on=False, xlim=(-3.5,3.5), ylim=(-2,2));
 ax.set_aspect('equal')
 ax.grid();
 
+cart_line, = ax.plot([], [], 'o-', lw=8);
 line, = ax.plot([], [], 'o-', lw=2);
 
 def animate(i):
@@ -150,8 +151,9 @@ def animate(i):
     x_pend = cart_pos + L*np.sin(thetha);
     y_pend = L*np.cos(thetha);
     line.set_data([cart_pos, x_pend],[0, y_pend]);
-    return line,
+    cart_line.set_data([cart_pos - 0.2, cart_pos + 0.2],[0,0])
+    return line,cart_line
 
-ani = animation.FuncAnimation(fig, animate, frames=499, blit=True);
-ani.save('NMPC_SS3.gif', writer='ffmpeg', fps=15)
+ani = animation.FuncAnimation(fig, animate, frames=mpciter, blit=True);
+ani.save('../gifs/SwingUp-{}.gif'.format(timestr), writer='ffmpeg', fps=15)
 plt.show()
