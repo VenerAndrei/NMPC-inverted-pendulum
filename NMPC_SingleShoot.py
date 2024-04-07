@@ -2,16 +2,17 @@ import casadi;
 import matplotlib.pyplot as plt;
 import numpy as np
 import time
+import matplotlib.animation as animation
 
 # Non Linear Model (ODEs)
 def dynamic(x_state,u):
     # x = [x dx th dth];
     # System constants
     g = 9.81;
-    L = 1;
+    L = 0.6;
     l = L / 2;
-    m = 0.1;
-    M = 1;
+    m = 0.2;
+    M = 0.7;
 
     # States
     x = x_state[0]
@@ -42,7 +43,7 @@ def rk4(ode, h, xs, u):
 
 
 T = 10;
-N = 100;
+N = 400;
 opti = casadi.Opti();
 X = opti.variable(4,N+1);
 x = X[0,:];
@@ -76,7 +77,7 @@ for k in range(0,N):
     opti.subject_to(X[:,k+1] == x_next)
 
 opti.subject_to(opti.bounded(-20,U,20));
-opti.subject_to(X[:,0] == np.array([0,0,np.pi/6,0]).T);
+opti.subject_to(X[:,0] == np.array([0,0,np.pi/5,0]).T);
 opti.subject_to(U[0] == 0);
 
 opti.solver('ipopt');
@@ -102,3 +103,23 @@ plt.legend(["x", "dx", "th", "dth"])
 plt.title('NMPC Inverted Pendulum - Single Shooting')
 plt.show()
 
+
+L = 1;
+fig = plt.figure(figsize=(5,5));
+ax = fig.add_subplot(autoscale_on=False, xlim=(-4,4), ylim=(-4,4));
+ax.set_aspect('equal')
+ax.grid();
+
+line, = ax.plot([], [], 'o-', lw=2);
+
+def animate(i):
+    cart_pos = x_SS[i];
+    thetha = th_SS[i];
+    x_pend = cart_pos + L*np.sin(thetha);
+    y_pend = L*np.cos(thetha);
+    line.set_data([cart_pos, x_pend],[0, y_pend]);
+    return line,
+
+ani = animation.FuncAnimation(fig, animate, frames=N, interval=1000*dt, blit=True);
+ani.save('NMPC_SS2.gif', writer='ffmpeg', fps=15)
+plt.show()
