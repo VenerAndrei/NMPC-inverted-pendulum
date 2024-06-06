@@ -17,14 +17,15 @@ def dynamic(x_state,u):
     th = x_state[2];
     dth = x_state[3]
 
-    q_th = 0.05;
+    q_th = 0.005;
     Mf = q_th * dth;
 
-    q_x = 0.01;
+    q_x = 0.001;
     Ff = -q_x * dx;
 
     f = u[0];
     ddx = (m*g*casadi.sin(th)*casadi.cos(th)  - (7/3)*(f + m*l*dth*dth*casadi.sin(th) + Ff) - (Mf*casadi.cos(th))/l)/(m*casadi.cos(th)*casadi.cos(th) - (7/3)*M);
+    ddx =  0;
     ddth = (g*casadi.sin(th) - ddx*casadi.cos(th) - Mf/(m*l))/((7/3)*l);
 
     return casadi.vertcat(dx,ddx,dth,ddth);
@@ -44,14 +45,14 @@ u = [0];
 res = []
 # parameters
 t_0 = 0. # start time
-t_end = 15. # end time
-h = 0.01 # step size
+t_end = 60. # end time
+h = 0.02 # step size
 t_arr = np.arange(t_0, t_end, h) # array of integration times
 n_steps = len(t_arr) # number of steps
 
 # states / control inputs
 u_stat = np.array([0.])             # static control input
-x_0 = np.array([0, 0, -0.1 , 0]) # initial state
+x_0 = np.array([0, 0, -np.pi/2 , 0]) # initial state
 x = np.zeros([len(x_0), n_steps])   # holds states at different times as columns
 x[:,0] = x_0                        # set initial state for t_0
 t1 = datetime.datetime.now();
