@@ -76,7 +76,7 @@ for step in range(n_steps):
     x = rk4(dynamic, h, x, u, {'L': L, 'm': m, 'q_th': q_th})
     if step < len(log_data):
     #    error += casadi.sumsqr(x[0] - log_data[step, 0]) + casadi.sumsqr(x[1] - log_data[step, 1]) + casadi.sumsqr(x[2] - log_data[step, 2]) + casadi.sumsqr(x[3] - log_data[step, 3])
-       error +=  (x[2] - log_data[step, 2])*(x[2] - log_data[step, 2]) + (x[3] - log_data[step, 3])*(x[3] - log_data[step, 3])
+       error +=  (x[2] - log_data[step, 2])*(x[2] - log_data[step, 2]); # + (x[3] - log_data[step, 3])*(x[3] - log_data[step, 3])
 
 # Minimize the error
 opti.minimize(error)
