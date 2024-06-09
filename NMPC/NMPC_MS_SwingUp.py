@@ -128,11 +128,37 @@ U_log = U_log[0,0:mpciter];
 
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
-plt.plot(X_log.T)
-plt.grid(True)
-plt.legend(["x", "dx", "th", "dth"])
-plt.title('NMPC Inverted Pendulum - Multiple Shooting')
+# Convert time steps to seconds
+time_steps = np.arange(0, mpciter * dt, dt)
+
+# Plotting each state in different subplots with y-axis labels
+fig, axs = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
+states = ["Cart Position (x)", "Cart Velocity (dx)", "Pendulum Angle (th)", "Pendulum Angular Velocity (dth)"]
+y_labels = ["meters", "meters/sec", "rads", "rads/sec"]
+for i in range(4):
+    axs[i].plot(time_steps, X_log[i, :].T, label=states[i])
+    axs[i].grid(True)
+    axs[i].set_title(states[i])
+    axs[i].set_ylabel(y_labels[i])
+    axs[i].legend()
+plt.xlabel('Time (seconds)')
+plt.suptitle('NMPC Inverted Pendulum - Multiple Shooting')
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.savefig("../plots/CartPoleLog-{}.png".format(timestr))
+
+plt.show()
+
+# Plotting the input command U
+plt.figure(figsize=(10, 4))
+plt.plot(time_steps, U_log.T, label='Input Command U')
+plt.axhline(y=10, color='r', linestyle='--', label='Upper Limit (10)')
+plt.axhline(y=-10, color='r', linestyle='--', label='Lower Limit (-10)')
+plt.grid(True)
+plt.title('Input Command U')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Force')
+plt.legend()
+plt.savefig("../plots/InputCommandU-{}.png".format(timestr))
 
 plt.show()
 

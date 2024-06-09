@@ -77,7 +77,7 @@ for k in range(0,N):
     opti.subject_to(X[:,k+1] == x_next)
 
 opti.subject_to(opti.bounded(-20,U,20));
-opti.subject_to(X[:,0] == np.array([0,0,np.pi/5,0]).T);
+opti.subject_to(X[:,0] == np.array([0,0,0.1,0]).T);
 opti.subject_to(U[0] == 0);
 
 opti.solver('ipopt');
