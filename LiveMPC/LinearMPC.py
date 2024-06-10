@@ -1,10 +1,8 @@
-import serial
-from datetime import datetime
 import casadi as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Discrete state-space matrices provided
+# Discrete state-space matrices from Matlab
 A = np.array([
     [1, 0.02, 0, 0],
     [0, 1, 0, 0],
@@ -25,11 +23,11 @@ Q = np.diag([100, 1, 100, 1])
 R = np.eye(1)
 
 # Constraints
-lower_bounds = -25
-upper_bounds = 25
+lower_bounds = -10
+upper_bounds = 10
 
 # MPC parameters
-N_pred = 20  # prediction horizon
+N_pred = 50  # prediction horizon
 N_sim = int(3 / 0.02)  # simulate first 3 seconds
 x_initial = np.array([0, 0, 0.1, 0])  # initial state with small angle
 
@@ -71,41 +69,38 @@ opts = {
 }
 opti.solver('ipopt', opts)
 
-# Open the serial port
-ser = serial.Serial('COM4', 921600)  # Replace 'COM4' with your actual COM port
+# Simulation loop
+u_sim = np.zeros((1, N_sim))
+x_sim = np.zeros((4, N_sim + 1))
+x_sim[:, 0] = x_initial
 
-if not ser.is_open:
-    ser.open()
+for i in range(N_sim):
+    if i == 0:
+        u_init = np.zeros((1, 1))
+    else:
+        u_init = u_sim[:, i - 1].reshape(-1, 1)
 
-last_uinit = 0;
-try:
-    print("Reading data from the serial port...")
-    while True:
-        if ser.in_waiting > 0:
-            
-            # Parse the line into a list of floats
-            line = ser.readline().decode('utf-8').strip()
-            state_data = np.array([float(x) for x in line.split('\t')])
+    opti.set_value(xinit, x_sim[:, i])
+    opti.set_value(uinit, u_init)
 
-            # Set the current state value for the optimizer
-            opti.set_value(xinit, state_data)
-            opti.set_value(uinit, last_uinit)
-            opti.set_value(yref, np.zeros((4, N_pred + 1)))
+    # Set yref to zero reference
+    opti.set_value(yref, np.zeros((4, N_pred + 1)))
 
-            # Solve the MPC problem
-            sol = opti.solve()
-            u_value = sol.value(u[:, 0])
-            last_uinit = u_value
+    sol = opti.solve()
+    u_sim[:, i] = sol.value(u[:, 0])
+    x_sim[:, i + 1] = A @ x_sim[:, i] + B @ u_sim[:, i]
 
-            # Print the timestamp, state, and control input on the same line
-            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # Include milliseconds
-            state_str = '\t'.join([f"{s:.2f}" for s in state_data])
-            print(f"{current_time} - State: {state_str} - Command: {u_value:.2f}")
+# Plotting results
+time = np.arange(0, N_sim) * 0.02
+plt.figure(figsize=(10, 6))
+plt.plot(time, x_sim[0, :-1], 'r', label='x')
+plt.plot(time, x_sim[1, :-1], 'g', label='dx')
+plt.plot(time, x_sim[2, :-1], 'b', label='theta')
+plt.plot(time, x_sim[3, :-1], 'm', label='dtheta')
+plt.xlabel('Time (s)')
+plt.ylabel('State values')
+plt.title('MPC Control - All States')
+plt.legend()
+plt.grid(True)
+plt.show()
 
-            # Send the control input back to the Arduino
-            ser.write(f"{u_value}\n".encode('utf-8'))
-         
-except KeyboardInterrupt:
-    print("Exiting program.")
-finally:
-    ser.close()

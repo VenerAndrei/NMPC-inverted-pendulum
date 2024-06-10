@@ -141,14 +141,16 @@ int test = 0;
 unsigned int now = 0;
 void loop() {
     if (micros() - currentTimeMicros > 20000) {
+        printAllStates();
+
         currentTimeMicros = micros();
         switchIsPressed = !digitalRead(SWITCH_PIN);
         readPotentiometer();
-        printAllStates();
 
         while(Serial.available() <= 0){}
         String input = Serial.readStringUntil('\n');
-        Serial.println(input);
+        double commandValue = input.toDouble(); 
+
         switch (state) {
             
             case 0:
@@ -177,7 +179,7 @@ void loop() {
                 break;
 
             case 3:
-                double accInMetersPerSecondSquared = -(K[0] * getPosInCm() * 0.01 + K[1] * getCartVelocity() * 0.01 + K[2] * getAngleInRad() + K[3] * getAngularVelocity());
+                double accInMetersPerSecondSquared = commandValue;
                 double accInCmPerSecondSquared = accInMetersPerSecondSquared * 0.02 * 100;
                 int newSpeed = stepper.speed() + cmToSteps(accInCmPerSecondSquared);
                 stepper.setSpeed(newSpeed);
@@ -189,15 +191,7 @@ void loop() {
                 break;
 
         }
-
-        if (printFlag) {
-                    //Serial.println(test);
-                    test = 0;
-
-            //printAllStates();
-        }
     }
-    test++;  
 }
 
 int cmToSteps(double l_cm) {
