@@ -28,8 +28,8 @@ N = int(T/dt)  # number of time steps
 horizon = 50  # prediction horizon
 
 # Initial state and reference
-x0 = np.array([0, 0, 0.1, 0])  # initial state [theta, omega, cart position, cart velocity]
-xref = np.array([0, 0, 0, 0])      # reference state [theta, omega, cart position, cart velocity]
+x0 = np.array([0, 0, 0.1, 0])      # initial state [cart position, cart velocity, theta, omega,]
+xref = np.array([0, 0, 0, 0])      # reference state [cart position, cart velocity, theta, omega]
 
 # MPC setup
 nx = A.shape[0]  # number of states
