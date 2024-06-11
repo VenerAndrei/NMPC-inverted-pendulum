@@ -23,8 +23,8 @@ B = np.array([
 
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([100, 1, 1, 1])
-R = np.diag([1])  # Increased the weight on control input to penalize large values
+Q = np.diag([1, 1, 100, 1])
+R = np.diag([10])  # Increased the weight on control input to penalize large values
 
 # MPC setup
 horizon = 60  # prediction horizon
@@ -86,7 +86,8 @@ try:
             x_init.value = state_data
 
             # Solve the MPC problem
-            prob.solve(solver=cp.OSQP)
+            if(np.abs(state_data[2]) < 0.2):
+                prob.solve(solver=cp.OSQP)
             
             if prob.status != cp.OPTIMAL:
                 print("Solver failed to find an optimal solution.")
