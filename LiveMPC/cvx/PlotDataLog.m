@@ -1,7 +1,7 @@
 % MATLAB script to read data from file and plot states and command
 
 % Load data
-data = readtable('data_log_20240611_214954.txt', 'Delimiter', '\t', 'Format', '%s%f%f%f%f%f');
+data = readtable('BestRun.txt', 'Delimiter', '\t', 'Format', '%s%f%f%f%f%f');
 
 % Extract columns
 timestamps = data{:, 1};
@@ -45,3 +45,7 @@ title('Command vs. Time');
 xlabel('Time');
 ylabel('Command (N)');
 grid on;
+
+%%
+
+plot(abs(fft(dx)))

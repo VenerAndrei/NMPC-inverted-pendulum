@@ -6,33 +6,18 @@ import matplotlib.pyplot as plt
 import signal
 import sys
 
-# Discrete state-space matrices provided
-# A = np.array([
-#     [1, 0.02, 0, 0],
-#     [0, 1, 0, 0],
-#     [0, 0, 1.004, 0.02002],
-#     [0, 0, 0.3579, 1.004]
-# ])
-
-# B = np.array([
-#     [0.0002],
-#     [0.02],
-#     [-0.000365],
-#     [-0.03652]
-# ])
-
 A = np.array([
     [1, 0.02, 0, 0],
     [0, 1, 0, 0],
-    [0, 0, 1.002, 0.02001],
-    [0, 0, 0.2001, 1.002]
+    [0, 0, 1.006, 0.02004],
+    [0, 0, 0.561, 1.006]
 ])
 
 B = np.array([
     [0.0002],
     [0.02],
-    [-0.0002041],
-    [-0.02042]
+    [-0.000572],
+    [-0.05725]
 ])
 
 # # PERCUTEAZA BINE CU ASTEA
@@ -44,7 +29,7 @@ B = np.array([
 
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([100, 1, 100, 1])
+Q = np.diag([30, 1, 10, 1])
 R = np.diag([1])  # Increased the weight on control input to penalize large values
 gamma = 1
 P = 1*Q  # Terminal cost matrix (can be set equal to Q or another matrix)
@@ -141,7 +126,7 @@ except Exception as e:
 finally:
     # Generate filename with timestamp
     file_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"data_log_{file_timestamp}.txt"
+    filename = f"data_log_{file_timestamp}_rod.txt"
     
     # Save buffer to a file
     with open(filename, "w") as file:
