@@ -33,16 +33,14 @@ xref = np.array([0, 0, 0, 0])  # reference state [cart position, cart velocity, 
 
 # Prediction horizons and solvers to test
 prediction_horizons = [10, 20, 30, 40, 50]
-solvers = [cp.OSQP, cp.SCS]  # Removed ECOS
-solverNames= ["OSQP","SCS"]
-solvNo = -1;
+solvers = [cp.OSQP, cp.SCS]
+solverNames = ["OSQP", "SCS"]
 
 # Storage for results
 results = []
+
 # Run simulations
-for solver in solvers:
-    solvNo += 1
-    solver_name = solverNames[solvNo] # Get the solver class name
+for solver, solver_name in zip(solvers, solverNames):
     for horizon in prediction_horizons:
         nx = A.shape[0]  # number of states
         nu = B.shape[1]  # number of inputs
@@ -101,11 +99,17 @@ for result in results:
     solver_name, horizon, min_time, max_time, avg_time = result
     print(f"{solver_name:<10} {horizon:<10} {min_time:<15.6f} {max_time:<15.6f} {avg_time:<15.6f}")
 
-# Plotting results (optional)
-for solver_name, horizon, min_time, max_time, avg_time in results:
-    plt.plot(horizon, avg_time, 'o', label=f'{solver_name} Avg Time')
+# Plotting results
+colors = {"OSQP": "red", "SCS": "blue"}
+markers = {"OSQP": "o", "SCS": "s"}
+
+for solver_name in solverNames:
+    horizons = [res[1] for res in results if res[0] == solver_name]
+    avg_times = [res[4] for res in results if res[0] == solver_name]
+    plt.plot(horizons, avg_times, marker=markers[solver_name], color=colors[solver_name], label=f'{solver_name} Avg Time')
 
 plt.xlabel('Prediction Horizon')
 plt.ylabel('Average Solve Time (s)')
 plt.title('Solver Performance Comparison')
+plt.legend()
 plt.show()
