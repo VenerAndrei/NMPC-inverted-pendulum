@@ -5,6 +5,16 @@ import cvxpy as cp
 import matplotlib.pyplot as plt
 import signal
 import sys
+import time
+
+# Offset Free MPC:
+# N = 50:
+# Missed: 14 iteration
+# Max Opt time : 0.088 sec
+
+# N = 30
+# Missed: 10
+# Max Opt time: 0.052 sec
 
 # System dynamics
 A = np.array([
@@ -24,8 +34,8 @@ B = np.array([
 # Observer dynamics
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([30, 1, 10, 1])
-R = np.diag([1])
+Q = np.diag([1, 1, 2, 1])
+R = np.diag([5])
 gamma = 1
 
 # MPC setup
@@ -44,7 +54,7 @@ Aext = np.block([
 ])
 
 Bext = np.vstack([B, np.zeros((nu, nu))])
-Qext = np.diag([30, 1, 10, 1, 0])  # extended Q matrix
+Qext = np.diag(np.hstack([np.diag(Q), np.zeros(nu)]))
 Pext = Qext  # terminal cost matrix
 cost = 0
 
@@ -67,49 +77,44 @@ if not ser.is_open:
     ser.open()
 
 x_ref.value = np.array([0, 0, 0, 0, 0])  # Reference state
-print(x_ref.shape)
+
 # Buffer to store data
 data_buffer = []
 
 prev_state_data = np.zeros(nx)
-prev_u_value = np.array([0]);
+prev_u_value = np.array([0])
+overTime = 0
+k = 0
+max_time = 0  # Variable to track maximum time between iterations
 
-k = 0;
 try:
     print("Reading data from the serial port...")
     while True:
+        start_time = time.time()  # Record the start time
+
         if ser.in_waiting > 0:
-            # print(f"k={k}")
             k += 1
             # Parse the line into a list of floats
             line = ser.readline().decode('utf-8').strip()
-            # print(line)
             state_data = np.array([float(x) for x in line.split('\t')])
             
             state_data[0] *= 0.01
             state_data[1] *= 0.01
+
             # Set the initial state
-            # print("STATE, PREV_STATE, PREV_U")
-            # print(state_data)
-            # print(prev_state_data)
-            # print(prev_u_value)
-            # print("VAL")
             test = np.linalg.pinv(B) @ (state_data - A @ prev_state_data - B @ prev_u_value)
             x_init.value = np.hstack((state_data, test[0]))
-            # print(x_init)
+
             # Solve the MPC problem
             if np.abs(state_data[2]) < 0.2:
                 prob.solve(solver=cp.OSQP)
 
-            # print("SOLVED THE PORB")
             if prob.status != cp.OPTIMAL:
                 u_value = 0  # Default value in case of solver failure
             else:
                 u_value = u.value[0,0]
 
-          
             prev_u_value = np.array([u_value])
-
             prev_state_data = np.copy(state_data)
 
             # Print the timestamp, state, and control input on the same line
@@ -122,6 +127,13 @@ try:
 
             # Send the control input back to the Arduino
             ser.write(f"{u_value}\n".encode('utf-8'))
+
+        end_time = time.time()  # Record the end time
+        iteration_time = end_time - start_time
+        if iteration_time > max_time:
+            max_time = iteration_time
+        if iteration_time >= 0.02:
+            overTime += 1
 
 except Exception as e:
     print(f"An error occurred: {e}")
@@ -137,6 +149,9 @@ finally:
     
     if ser.is_open:
         ser.close()
-        print("CLOSED SERIAL CONENCTION")
+        print("CLOSED SERIAL CONNECTION")
     
     print(f"Data saved to {filename}")
+    print(f"Maximum time between iterations: {max_time:.6f} seconds")
+    print(f"Missed Deadline: {overTime} iterations")
+
