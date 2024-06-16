@@ -129,57 +129,108 @@ U_log = U_log[0,0:mpciter];
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
 # Convert time steps to seconds
+# time_steps = np.arange(0, mpciter * dt, dt)
+
+# # Plotting each state in different subplots with y-axis labels
+# fig, axs = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
+# states = ["Cart Position (x)", "Cart Velocity (dx)", "Pendulum Angle (th)", "Pendulum Angular Velocity (dth)"]
+# y_labels = ["meters", "meters/sec", "rads", "rads/sec"]
+# for i in range(4):
+#     axs[i].plot(time_steps, X_log[i, :].T, label=states[i])
+#     axs[i].grid(True)
+#     axs[i].set_title(states[i])
+#     axs[i].set_ylabel(y_labels[i])
+#     axs[i].legend()
+# plt.xlabel('Time (seconds)')
+# plt.suptitle('NMPC Inverted Pendulum - Multiple Shooting')
+# plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+# plt.savefig("../plots/CartPoleLog-{}.png".format(timestr))
+
+# plt.show()
+
+# # Plotting the input command U
+# plt.figure(figsize=(10, 4))
+# plt.plot(time_steps, U_log.T, label='Input Command U')
+# plt.axhline(y=10, color='r', linestyle='--', label='Upper Limit (10)')
+# plt.axhline(y=-10, color='r', linestyle='--', label='Lower Limit (-10)')
+# plt.grid(True)
+# plt.title('Input Command U')
+# plt.xlabel('Time (seconds)')
+# plt.ylabel('Force')
+# plt.legend()
+# plt.savefig("../plots/InputCommandU-{}.png".format(timestr))
+
+# plt.show()
+
+# L = 1;
+# fig = plt.figure(figsize=(5,5));
+# ax = fig.add_subplot(autoscale_on=False, xlim=(-3.5,3.5), ylim=(-2,2));
+# ax.set_aspect('equal')
+# ax.grid();
+
+# cart_line, = ax.plot([], [], 'o-', lw=8);
+# line, = ax.plot([], [], 'o-', lw=2);
+
+# def animate(i):
+#     cart_pos = X_log[0,i];
+#     thetha = X_log[2,i];
+#     x_pend = cart_pos + L*np.sin(thetha);
+#     y_pend = L*np.cos(thetha);
+#     line.set_data([cart_pos, x_pend],[0, y_pend]);
+#     cart_line.set_data([cart_pos - 0.2, cart_pos + 0.2],[0,0])
+#     return line,cart_line
+
+# ani = animation.FuncAnimation(fig, animate, frames=mpciter, blit=True);
+# ani.save('../gifs/SwingUp-{}.gif'.format(timestr), writer='ffmpeg', fps=15)
+# plt.show()
+
 time_steps = np.arange(0, mpciter * dt, dt)
 
+# Define a list of colors for the subplots
+colors = ['tab:blue', 'tab:green', 'tab:orange', 'tab:red', 'tab:purple']
+
 # Plotting each state in different subplots with y-axis labels
-fig, axs = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
-states = ["Cart Position (x)", "Cart Velocity (dx)", "Pendulum Angle (th)", "Pendulum Angular Velocity (dth)"]
-y_labels = ["meters", "meters/sec", "rads", "rads/sec"]
+fig, axs = plt.subplots(5, 1, figsize=(10, 10), sharex=True)
+states = ["Cart Position (x)", "Cart Velocity (dx)", "Pendulum Angle (th)", "Pendulum Angular Velocity (dth)", "Input Command (u)"]
+y_labels = ["Position (m)", "Velocity (m/s)", "Angle (rad)", "Angular Velocity (rad/s)", "Force (N)"]
+
 for i in range(4):
-    axs[i].plot(time_steps, X_log[i, :].T, label=states[i])
+    axs[i].plot(time_steps, X_log[i, :], label=states[i], color=colors[i], linewidth=1.5)
     axs[i].grid(True)
-    axs[i].set_title(states[i])
     axs[i].set_ylabel(y_labels[i])
-    axs[i].legend()
-plt.xlabel('Time (seconds)')
-plt.suptitle('NMPC Inverted Pendulum - Multiple Shooting')
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.savefig("../plots/CartPoleLog-{}.png".format(timestr))
+    axs[i].legend(loc='upper right', fontsize='small')
 
-plt.show()
+# Plot the input command on the fifth subplot
+axs[4].plot(time_steps, U_log.T, label='Input Command U', color=colors[4], linewidth=1.5)
+axs[4].axhline(y=10, color='r', linestyle='--', label='Upper Limit (10)')
+axs[4].axhline(y=-10, color='r', linestyle='--', label='Lower Limit (-10)')
+axs[4].grid(True)
+axs[4].set_ylabel(y_labels[4])
+axs[4].legend(loc='upper right', fontsize='small')
 
-# Plotting the input command U
-plt.figure(figsize=(10, 4))
-plt.plot(time_steps, U_log.T, label='Input Command U')
-plt.axhline(y=10, color='r', linestyle='--', label='Upper Limit (10)')
-plt.axhline(y=-10, color='r', linestyle='--', label='Lower Limit (-10)')
-plt.grid(True)
-plt.title('Input Command U')
-plt.xlabel('Time (seconds)')
-plt.ylabel('Force')
-plt.legend()
-plt.savefig("../plots/InputCommandU-{}.png".format(timestr))
-
-plt.show()
-
-L = 1;
-fig = plt.figure(figsize=(5,5));
-ax = fig.add_subplot(autoscale_on=False, xlim=(-3.5,3.5), ylim=(-2,2));
+axs[0].set_title('States and Input Command vs. Time')
+axs[-1].set_xlabel('Time (seconds)')
+plt.tight_layout()
+plt.savefig("CartPoleLog-{}.png".format(timestr), dpi=300)
+# Animation setup
+L = 1
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(autoscale_on=False, xlim=(-3.5, 3.5), ylim=(-2, 2))
 ax.set_aspect('equal')
-ax.grid();
+ax.grid(True)
 
-cart_line, = ax.plot([], [], 'o-', lw=8);
-line, = ax.plot([], [], 'o-', lw=2);
+cart_line, = ax.plot([], [], 's-', lw=8, markersize=12)
+line, = ax.plot([], [], 'o-', lw=2, markersize=6)
 
 def animate(i):
-    cart_pos = X_log[0,i];
-    thetha = X_log[2,i];
-    x_pend = cart_pos + L*np.sin(thetha);
-    y_pend = L*np.cos(thetha);
-    line.set_data([cart_pos, x_pend],[0, y_pend]);
-    cart_line.set_data([cart_pos - 0.2, cart_pos + 0.2],[0,0])
-    return line,cart_line
+    cart_pos = X_log[0, i]
+    theta = X_log[2, i]
+    x_pend = cart_pos + L * np.sin(theta)
+    y_pend = L * np.cos(theta)
+    line.set_data([cart_pos, x_pend], [0, y_pend])
+    cart_line.set_data([cart_pos - 0.2, cart_pos + 0.2], [0, 0])
+    return line, cart_line
 
-ani = animation.FuncAnimation(fig, animate, frames=mpciter, blit=True);
-ani.save('../gifs/SwingUp-{}.gif'.format(timestr), writer='ffmpeg', fps=15)
+ani = animation.FuncAnimation(fig, animate, frames=mpciter, blit=True)
+ani.save('SwingUp-{}.gif'.format(timestr), writer='ffmpeg', fps=15)
 plt.show()

@@ -44,7 +44,7 @@ B = np.array([
 
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([100, 1, 100, 1])
+Q = np.diag([30, 1, 10, 1])
 R = np.diag([1])  # Increased the weight on control input to penalize large values
 gamma = 1
 P = 1*Q  # Terminal cost matrix (can be set equal to Q or another matrix)

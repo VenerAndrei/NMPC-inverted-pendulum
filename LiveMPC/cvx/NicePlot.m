@@ -14,34 +14,37 @@ command = data{:, 6};
 % Convert timestamps to datetime array
 timestamps = datetime(timestamps, 'InputFormat', 'yyyy-MM-dd HH:mm:ss.SSS');
 
+num_samples = length(x);
+time = (0:num_samples-1)' * 0.02;
+
 % Plot the states
 figure;
 subplot(4, 1, 1);
-plot(timestamps, x);
+plot(time, x);
 ylabel('x (m)');
 title('States vs. Time');
 grid on;
 
 subplot(4, 1, 2);
-plot(timestamps, dx);
+plot(time, dx);
 ylabel('dx (m/s)');
 grid on;
 
 subplot(4, 1, 3);
-plot(timestamps, theta);
+plot(time, theta);
 ylabel('\theta (rad)');
 grid on;
 
 subplot(4, 1, 4);
-plot(timestamps, dtheta);
+plot(time, dtheta);
 ylabel('d\theta (rad/s)');
-xlabel('Time');
+xlabel('Time (s)');
 grid on;
 
 % Plot the command
 figure;
-plot(timestamps, command);
+plot(time, command);
 title('Command vs. Time');
-xlabel('Time');
-ylabel('Command (N)');
+xlabel('Time (s)');
+ylabel('Command (m/s)');
 grid on;

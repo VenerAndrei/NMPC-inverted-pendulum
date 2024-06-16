@@ -116,7 +116,7 @@ try:
             print(f"{current_time} - State: {state_str} - Command: {u_value:.2f}")
 
             # Append the data to buffer
-            data_buffer.append(f"{current_time}\t{state_str}\t{u_value:.2f}")
+            data_buffer.append(f"{state_str}\t{u_value:.2f}")
 
             # Send the control input back to the Arduino
             ser.write(f"{u_value}\n".encode('utf-8'))
@@ -126,7 +126,7 @@ except Exception as e:
 finally:
     # Generate filename with timestamp
     file_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"data_log_{file_timestamp}_rod.txt"
+    filename = f"data_log_{file_timestamp}_rod_ok.txt"
     
     # Save buffer to a file
     with open(filename, "w") as file:
