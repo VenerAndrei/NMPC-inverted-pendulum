@@ -1,12 +1,12 @@
 import casadi.*;
 clear all;close all;
 M = 0.018;
-m = 0.135;
+m = 0.133;
 b = 0;
 q = 0;
 g = 9.8;
 
-l = 0.49; % 0.52
+l = 0.475; % 0.52
 Ts = 0.02;
 I = m*(l^2);
 

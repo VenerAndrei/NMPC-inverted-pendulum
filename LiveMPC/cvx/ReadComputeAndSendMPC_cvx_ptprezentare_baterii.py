@@ -44,13 +44,13 @@ B = np.array([
 
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([20, 2, 50, 10])
-R = np.diag([1])  # Increased the weight on control input to penalize large values
+Q = np.diag([60, 1, 30, 1])
+R = np.diag([0.5])  # Increased the weight on control input to penalize large values
 gamma = 1
-P = 50*Q  # Terminal cost matrix (can be set equal to Q or another matrix)
+P = 1*Q  # Terminal cost matrix (can be set equal to Q or another matrix)
 
 # MPC setup
-horizon = 60  # prediction horizon
+horizon = 50  # prediction horizon
 nx = A.shape[0]  # number of states
 nu = B.shape[1]  # number of inputs
 
