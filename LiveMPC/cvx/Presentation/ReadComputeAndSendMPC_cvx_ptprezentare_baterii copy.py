@@ -21,19 +21,29 @@ import sys
 #     [-0.03652]
 # ])
 
-A = np.array([
-    [1, 0.02, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1.002, 0.02001],
-    [0, 0, 0.2065, 1.002]
-])
+# A = np.array([
+#     [1, 0.02, 0, 0],
+#     [0, 1, 0, 0],
+#     [0, 0, 1.002, 0.02001],
+#     [0, 0, 0.2065, 1.002]
+# ])
 
-B = np.array([
-    [0.0002],
-    [0.02],
-    [-0.0002106],
-    [-0.02107]
-])
+# B = np.array([
+#     [0.0002],
+#     [0.02],
+#     [-0.0002106],
+#     [-0.02107]
+# ])
+
+A = np.array([[1, 0.05, 0, 0],
+              [0, 1, 0, 0],
+              [0, 0, 1.013, 0.05021],
+              [0, 0, 0.5073, 1.013]])
+
+B = np.array([[0.00125],
+              [0.05],
+              [-0.001291],
+              [-0.05176]])
 
 # # PERCUTEAZA BINE CU ASTEA
 # C = np.eye(4)
@@ -44,13 +54,13 @@ B = np.array([
 
 C = np.eye(4)
 D = np.zeros((4, 1))
-Q = np.diag([10, 40, 50, 5])
-R = np.diag([0.9])  # Increased the weight on control input to penalize large values
+Q = np.diag([50, 1, 100, 1])
+R = np.diag([0.1])  # Increased the weight on control input to penalize large values
 gamma = 1
 P = 1*Q  # Terminal cost matrix (can be set equal to Q or another matrix)
 
 # MPC setup
-horizon = 40  # prediction horizon
+horizon = 20  # prediction horizon
 nx = A.shape[0]  # number of states
 nu = B.shape[1]  # number of inputs
 

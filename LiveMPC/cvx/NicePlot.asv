@@ -1,5 +1,5 @@
 % MATLAB script to read data from file and plot states and command
-clear all; clc
+clear all; close all; clc
 % Load data
 data = readtable('.\logs\PentruLatex.txt', 'Delimiter', '\t', 'Format', '%s%f%f%f%f%f');
 
