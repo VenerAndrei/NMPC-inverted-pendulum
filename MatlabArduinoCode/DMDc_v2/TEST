@@ -1,0 +1,281 @@
+This is a critical systems identification challenge:
+
+❓ How can I recover the open-loop dynamics of a system if I only have closed-loop data (e.g., from DMDc)?
+
+The answer lies in carefully modeling the controller, and "decoupling" its effect from the closed-loop system.
+
+🔄 Overview: From Closed-Loop to Open-Loop Dynamics
+If you collect data under feedback control, what DMDc sees is:
+
+𝑥
+𝑘
++
+1
+=
+𝐴
+𝑥
+𝑘
++
+𝐵
+𝑢
+𝑘
+=
+𝐴
+𝑥
+𝑘
++
+𝐵
+𝐾
+𝑥
+𝑘
+=
+(
+𝐴
++
+𝐵
+𝐾
+)
+𝑥
+𝑘
+x 
+k+1
+​
+ =Ax 
+k
+​
+ +Bu 
+k
+​
+ =Ax 
+k
+​
+ +BKx 
+k
+​
+ =(A+BK)x 
+k
+​
+ 
+So your DMDc (if input is 
+𝑢
+𝑘
+=
+𝐾
+𝑥
+𝑘
+u 
+k
+​
+ =Kx 
+k
+​
+ ) actually identifies:
+
+𝐴
+closed
+=
+𝐴
++
+𝐵
+𝐾
+A 
+closed
+​
+ =A+BK
+Thus:
+
+𝐴
+=
+𝐴
+closed
+−
+𝐵
+𝐾
+A=A 
+closed
+​
+ −BK
+​
+ 
+If you know the controller gain 
+𝐾
+K, and DMDc gives you 
+𝐴
+closed
+A 
+closed
+​
+  and 
+𝐵
+B, you can recover the true open-loop dynamics 
+𝐴
+A.
+
+✅ Method 1: If You Know the Controller Gain 
+𝐾
+K
+Run DMDc on closed-loop data.
+
+Let 
+𝐴
+𝑐
+=
+𝐴
+closed-loop
+A 
+c
+​
+ =A 
+closed-loop
+​
+  from DMDc.
+
+Use the known controller gain 
+𝐾
+K to compute:
+
+𝐴
+=
+𝐴
+𝑐
+−
+𝐵
+𝐾
+A=A 
+c
+​
+ −BK
+That’s your open-loop dynamics.
+
+🔁 This assumes that 
+𝑢
+𝑘
+=
+𝐾
+𝑥
+𝑘
+u 
+k
+​
+ =Kx 
+k
+​
+  (i.e., control is a state feedback law).
+
+🧠 Method 2: If You Do Not Know 
+𝐾
+K — Subspace or Two-Stage DMDc
+When 
+𝐾
+K is unknown, use a two-step system identification strategy to separate the plant from the controller:
+
+🧩 Step 1: Model Controller Behavior
+If you have access to both 
+𝑥
+𝑘
+x 
+k
+​
+  and 
+𝑢
+𝑘
+u 
+k
+​
+ , you can fit the controller model:
+
+𝑢
+𝑘
+=
+𝐾
+𝑥
+𝑘
+⇒
+Fit 
+𝐾
+ via linear regression: 
+𝑢
+𝑘
+≈
+𝐾
+𝑥
+𝑘
+u 
+k
+​
+ =Kx 
+k
+​
+ ⇒Fit K via linear regression: u 
+k
+​
+ ≈Kx 
+k
+​
+ 
+This gives you an estimated 
+𝐾
+^
+K
+^
+ , and now:
+
+🔧 Step 2: Use DMDc Estimate to Recover 
+𝐴
+A
+Run DMDc to get 
+𝐴
+closed
+A 
+closed
+​
+ , 
+𝐵
+B.
+
+Then use:
+
+𝐴
+^
+=
+𝐴
+closed
+−
+𝐵
+𝐾
+^
+A
+^
+ =A 
+closed
+​
+ −B 
+K
+^
+ 
+This gives you a reasonable estimate of the open-loop 
+𝐴
+A.
+
+🔍 Optional: Use Open-Loop Simulated Input for Validation
+To validate your recovered 
+𝐴
+A, simulate:
+
+𝑥
+𝑘
++
+1
+=
+𝐴
+𝑥
+𝑘
+x 
+k+1
+​
+ =Ax 
+k
+​
+ 
+with zero or small random input, and check if it reproduces known open-loop instability (e.g., pendulum tipping over).
+

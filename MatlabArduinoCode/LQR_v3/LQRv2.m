@@ -76,3 +76,5 @@ xlabel("Time (s)")
 ylabel("Angular Velocity (rad/s)")
 
 K
+
+%%
